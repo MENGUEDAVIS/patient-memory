@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { ZodError } from "zod";
 import { Role } from "@prisma/client";
 import { readSession, type SessionUser } from "@/lib/auth/session";
 import { prisma } from "@/lib/prisma";
@@ -26,6 +27,28 @@ export function jsonError(error: unknown) {
   }
   if (error instanceof Error && error.message === "CSRF_ORIGIN_MISMATCH") {
     return NextResponse.json({ error: "Invalid request origin." }, { status: 403 });
+  }
+  if (error instanceof ZodError) {
+    return NextResponse.json({ error: "Please correct the highlighted fields." }, { status: 422 });
+  }
+  const message = error instanceof Error ? error.message : "";
+  if (message.includes("AUTH_SECRET")) {
+    return NextResponse.json(
+      { error: "Authentication is not configured. Set AUTH_SECRET (32+ characters) on Vercel." },
+      { status: 503 },
+    );
+  }
+  if (
+    message.includes("Can't reach database") ||
+    message.includes("P1001") ||
+    message.includes("P1010") ||
+    message.includes("P1000") ||
+    message.toLowerCase().includes("database url")
+  ) {
+    return NextResponse.json(
+      { error: "Database is unreachable. Check DATABASE_URL on Vercel (Neon pooled URL + pgbouncer=true)." },
+      { status: 503 },
+    );
   }
   const status = (error as { status?: number }).status;
   if (typeof status === "number") {

@@ -9,12 +9,26 @@ import { apiHandler } from "@/lib/handler";
 import { HttpError } from "@/lib/api";
 import { writeAudit } from "@/lib/audit";
 
+export const runtime = "nodejs";
+
 export const POST = apiHandler(async (request) => {
+  if (!process.env.DATABASE_URL) {
+    throw new HttpError(503, "Database is not configured. Set DATABASE_URL on Vercel.");
+  }
+  if (!process.env.AUTH_SECRET || process.env.AUTH_SECRET.length < 32) {
+    throw new HttpError(503, "Authentication is not configured. Set AUTH_SECRET (32+ characters) on Vercel.");
+  }
   const ip = clientIp(request);
   if (!rateLimitLogin(`login:${ip}`).ok) {
     throw new HttpError(429, "Too many sign-in attempts. Please wait and try again.");
   }
-  const body = loginSchema.parse(await request.json());
+  let payload: unknown;
+  try {
+    payload = await request.json();
+  } catch {
+    throw new HttpError(400, "Invalid request body.");
+  }
+  const body = loginSchema.parse(payload);
   const user = await prisma.user.findUnique({ where: { email: body.email.toLowerCase() } });
   if (!user || !(await verifyPassword(body.password, user.passwordHash))) {
     throw new HttpError(401, "Incorrect email or password.");
