@@ -10,12 +10,14 @@ export default async function LoginPage() {
   if (user) redirect(ROLE_HOME[user.role]);
   return (
     <div className="grid min-h-screen lg:grid-cols-2">
-      <section className="hidden bg-[var(--navy)] p-12 text-white lg:flex lg:flex-col lg:justify-between">
-        <div className="flex items-center gap-2">
+      <section className="relative hidden overflow-hidden p-12 text-white lg:flex lg:flex-col lg:justify-between">
+        <img src="/landing/hero.jpg" alt="" className="landing-hero-image absolute inset-0 h-full w-full object-cover" />
+        <div className="absolute inset-0 bg-[#071421]/75" />
+        <div className="relative flex items-center gap-2">
           <Shield className="h-6 w-6 text-teal-300" />
           <span className="text-lg font-semibold">Patient Memory</span>
         </div>
-        <div className="max-w-lg space-y-4">
+        <div className="relative max-w-lg space-y-4">
           <p className="text-sm uppercase tracking-[0.18em] text-teal-200">Hospital EHR & Clinical Intelligence</p>
           <h1 className="text-4xl font-semibold leading-tight">Your medical history should follow you — not your file.</h1>
           <p className="text-white/70">
@@ -23,12 +25,15 @@ export default async function LoginPage() {
             interaction—reducing clinical risk while protecting revenue and accountability.
           </p>
         </div>
-        <p className="text-xs text-white/40">DEMO DATA only. Never use real patient information in this environment.</p>
+        <p className="relative text-xs text-white/40">DEMO DATA only. Never use real patient information in this environment.</p>
       </section>
       <section className="flex items-center justify-center p-6">
         <div className="w-full max-w-md space-y-6">
           <div>
-            <p className="pm-label">Sign in</p>
+            <a href="/" className="text-xs text-[var(--muted)] hover:underline">
+              ← Presentation home
+            </a>
+            <p className="pm-label mt-4">Sign in</p>
             <h2 className="mt-1 text-2xl font-semibold">Clinical workspace</h2>
             <p className="mt-1 text-sm text-[var(--muted)]">Role-based access. All sensitive actions are audited.</p>
           </div>
