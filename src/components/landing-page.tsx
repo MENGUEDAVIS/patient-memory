@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { Shield } from "lucide-react";
 import { useEffect, useState } from "react";
 import { DonutChart, MixBarChart, VolumeChart } from "@/components/charts";
@@ -87,10 +88,13 @@ export function LandingPage({
       </header>
 
       <section id="top" className="relative isolate min-h-screen overflow-hidden">
-        <img
+        <Image
           src="/landing/hero.jpg"
           alt="Hospital operations room with a longitudinal clinical display"
-          className="landing-hero-image absolute inset-0 h-full w-full object-cover"
+          fill
+          priority
+          sizes="100vw"
+          className="landing-hero-image object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-r from-[#071421] via-[#071421]/80 to-[#071421]/25" />
         <div className="relative mx-auto flex min-h-screen max-w-6xl flex-col justify-end px-5 pb-20 pt-28 md:justify-center">
@@ -150,8 +154,14 @@ export function LandingPage({
               key={pillar.title}
               className="overflow-hidden rounded-2xl border border-white/10 bg-white/5 transition duration-500 hover:-translate-y-1 hover:border-teal-300/40"
             >
-              <div className="aspect-[4/3] overflow-hidden">
-                <img src={pillar.image} alt={pillar.alt} className="h-full w-full object-cover transition duration-700 hover:scale-105" />
+              <div className="relative aspect-[4/3] overflow-hidden">
+                <Image
+                  src={pillar.image}
+                  alt={pillar.alt}
+                  fill
+                  sizes="(min-width: 768px) 33vw, 100vw"
+                  className="object-cover transition duration-700 hover:scale-105"
+                />
               </div>
               <div className="p-5">
                 <h3 className="text-lg font-semibold">{pillar.title}</h3>

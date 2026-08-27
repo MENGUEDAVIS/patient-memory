@@ -1,5 +1,7 @@
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
+import Image from "next/image";
+import Link from "next/link";
 import { Shield } from "lucide-react";
 import { readSession } from "@/lib/auth/session";
 import { ROLE_HOME } from "@/lib/rbac";
@@ -11,7 +13,7 @@ export default async function LoginPage() {
   return (
     <div className="grid min-h-screen lg:grid-cols-2">
       <section className="relative hidden overflow-hidden p-12 text-white lg:flex lg:flex-col lg:justify-between">
-        <img src="/landing/hero.jpg" alt="" className="landing-hero-image absolute inset-0 h-full w-full object-cover" />
+        <Image src="/landing/hero.jpg" alt="" fill priority sizes="50vw" className="landing-hero-image object-cover" />
         <div className="absolute inset-0 bg-[#071421]/75" />
         <div className="relative flex items-center gap-2">
           <Shield className="h-6 w-6 text-teal-300" />
@@ -30,9 +32,9 @@ export default async function LoginPage() {
       <section className="flex items-center justify-center p-6">
         <div className="w-full max-w-md space-y-6">
           <div>
-            <a href="/" className="text-xs text-[var(--muted)] hover:underline">
+            <Link href="/" className="text-xs text-[var(--muted)] hover:underline">
               ← Presentation home
-            </a>
+            </Link>
             <p className="pm-label mt-4">Sign in</p>
             <h2 className="mt-1 text-2xl font-semibold">Clinical workspace</h2>
             <p className="mt-1 text-sm text-[var(--muted)]">Role-based access. All sensitive actions are audited.</p>
