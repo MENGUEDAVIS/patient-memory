@@ -19,21 +19,21 @@ export const GET = apiHandler(async (request) => {
   const where: Prisma.AuditEventWhereInput = { hospitalId };
   if (actor) {
     where.OR = [
-      { actorName: { contains: actor } },
+      { actorName: { contains: actor, mode: "insensitive" } },
       { actorRole: Object.values(Role).includes(actor as Role) ? (actor as Role) : undefined },
     ];
   }
   if (patient) {
     where.patient = {
       OR: [
-        { publicId: { contains: patient } },
-        { lastName: { contains: patient } },
-        { firstName: { contains: patient } },
+        { publicId: { contains: patient, mode: "insensitive" } },
+        { lastName: { contains: patient, mode: "insensitive" } },
+        { firstName: { contains: patient, mode: "insensitive" } },
       ],
     };
   }
-  if (activity) where.activity = { contains: activity };
-  if (department) where.department = { contains: department };
+  if (activity) where.activity = { contains: activity, mode: "insensitive" };
+  if (department) where.department = { contains: department, mode: "insensitive" };
   if (from || to) {
     where.createdAt = {
       gte: from ? new Date(from) : undefined,

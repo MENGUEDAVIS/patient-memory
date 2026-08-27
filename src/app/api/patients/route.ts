@@ -18,11 +18,11 @@ export const GET = apiHandler(async (request) => {
   const where: Prisma.PatientWhereInput = { hospitalId };
   if (q) {
     where.OR = [
-      { publicId: { contains: q } },
+      { publicId: { contains: q, mode: "insensitive" } },
       { phone: { contains: q.replace(/\s/g, "") } },
-      { firstName: { contains: q } },
-      { lastName: { contains: q } },
-      { email: { contains: q } },
+      { firstName: { contains: q, mode: "insensitive" } },
+      { lastName: { contains: q, mode: "insensitive" } },
+      { email: { contains: q, mode: "insensitive" } },
     ];
   }
   const patients = await prisma.patient.findMany({

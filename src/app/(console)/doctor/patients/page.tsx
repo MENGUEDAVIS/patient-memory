@@ -16,10 +16,10 @@ export default async function DoctorPatients({ searchParams }: { searchParams: P
       ? {
           hospitalId,
           OR: [
-            { publicId: { contains: query } },
+            { publicId: { contains: query, mode: "insensitive" } },
             { phone: { contains: query.replace(/\s/g, "") } },
-            { firstName: { contains: query } },
-            { lastName: { contains: query } },
+            { firstName: { contains: query, mode: "insensitive" } },
+            { lastName: { contains: query, mode: "insensitive" } },
           ],
         }
       : { hospitalId },

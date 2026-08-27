@@ -16,14 +16,14 @@ export default async function AuditPage({
   const hospitalId = await hospitalScope(user);
   const filters = await searchParams;
   const where: Prisma.AuditEventWhereInput = { hospitalId };
-  if (filters.actor) where.actorName = { contains: filters.actor };
-  if (filters.activity) where.activity = { contains: filters.activity };
-  if (filters.department) where.department = { contains: filters.department };
+  if (filters.actor) where.actorName = { contains: filters.actor, mode: "insensitive" };
+  if (filters.activity) where.activity = { contains: filters.activity, mode: "insensitive" };
+  if (filters.department) where.department = { contains: filters.department, mode: "insensitive" };
   if (filters.patient) {
     where.patient = {
       OR: [
-        { publicId: { contains: filters.patient } },
-        { lastName: { contains: filters.patient } },
+        { publicId: { contains: filters.patient, mode: "insensitive" } },
+        { lastName: { contains: filters.patient, mode: "insensitive" } },
       ],
     };
   }

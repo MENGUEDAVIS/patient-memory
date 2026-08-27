@@ -1,10 +1,12 @@
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "rhel-openssl-3.0.x"]
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 enum Role {
@@ -548,9 +550,9 @@ model Notification {
 model HospitalBillingConfig {
   id                 String   @id @default(uuid())
   hospitalId         String   @unique
-  monthlyFeeUsd      Decimal  @default(500)
-  encounterFeeUsd    Decimal  @default(0.30)
-  onboardingFeeUsd   Decimal  @default(5000)
+  monthlyFeeUsd      Decimal  @default(500) @db.Decimal(10, 2)
+  encounterFeeUsd    Decimal  @default(0.30) @db.Decimal(10, 2)
+  onboardingFeeUsd   Decimal  @default(5000) @db.Decimal(10, 2)
   updatedAt          DateTime @updatedAt
   hospital           Hospital @relation(fields: [hospitalId], references: [id])
 }
@@ -561,7 +563,7 @@ model BillingRecord {
   hospitalId   String
   patientId    String
   encounterId  String        @unique
-  amountUsd    Decimal
+  amountUsd    Decimal       @db.Decimal(10, 2)
   status       InvoiceStatus @default(ISSUED)
   billedAt     DateTime      @default(now())
   hospital     Hospital      @relation(fields: [hospitalId], references: [id])
@@ -574,7 +576,7 @@ model Payment {
   provider      String        @default("MOCK")
   providerRef   String        @unique
   status        PaymentStatus @default(MOCK)
-  amountUsd     Decimal
+  amountUsd     Decimal       @db.Decimal(10, 2)
   hospitalId    String
   patientId     String?
   encounterId   String?
