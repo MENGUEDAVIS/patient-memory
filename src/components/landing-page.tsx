@@ -6,6 +6,7 @@ import { Shield } from "lucide-react";
 import { useEffect, useState } from "react";
 import { DonutChart, MixBarChart, VolumeChart } from "@/components/charts";
 import { BRAND } from "@/lib/brand";
+import { PLANS } from "@/lib/plans";
 import type { NamedCount, SeriesPoint } from "@/lib/aggregates";
 
 const TIMELINE = [
@@ -74,10 +75,19 @@ export function LandingPage({
             <a href="#insights" className="hover:text-white">
               Insights
             </a>
+            <a href="#pricing" className="hover:text-white">
+              Pricing
+            </a>
             <a href="#demo" className="hover:text-white">
               Demo
             </a>
           </nav>
+          <Link
+            href="/register"
+            className="hidden rounded-md border border-white/20 px-3 py-1.5 text-sm text-white hover:bg-white/10 md:inline-flex"
+          >
+            Register a facility
+          </Link>
           <Link
             href={cta}
             className="rounded-md bg-teal-400 px-3 py-1.5 text-sm font-semibold text-[#062017] hover:bg-teal-300"
@@ -231,6 +241,48 @@ export function LandingPage({
               <VolumeChart data={stats?.patient.visits ?? []} theme="dark" name="Visits" />
             </div>
           </div>
+        </div>
+      </section>
+
+      <section id="pricing" className="mx-auto max-w-6xl px-5 py-24">
+        <p className="pm-label text-teal-200">Commercial bundles</p>
+        <h2 className="mt-3 text-3xl font-semibold">Pricing for clinics, hospitals and networks.</h2>
+        <p className="mt-3 max-w-2xl text-white/70">
+          Implementation, monthly platform fee and a per-encounter charge. Configure the values later in Billing.
+          Payment collection is simulated for this MVP.
+        </p>
+        <div className="mt-10 grid gap-5 lg:grid-cols-3">
+          {Object.values(PLANS).map((plan) => (
+            <article
+              key={plan.code}
+              className={`flex flex-col rounded-2xl border p-6 ${
+                "featured" in plan && plan.featured
+                  ? "border-teal-300/50 bg-teal-400/10"
+                  : "border-white/10 bg-white/5"
+              }`}
+            >
+              <p className="pm-label text-teal-200">{plan.audience}</p>
+              <h3 className="mt-2 text-2xl font-semibold">{plan.name}</h3>
+              <p className="mt-4 text-4xl font-semibold">
+                ${plan.monthlyFeeUsd}
+                <span className="text-base font-normal text-white/50"> / month</span>
+              </p>
+              <p className="mt-1 text-sm text-white/60">
+                ${plan.onboardingFeeUsd.toLocaleString()} onboarding · ${plan.encounterFeeUsd.toFixed(2)} / encounter
+              </p>
+              <ul className="mt-5 flex-1 space-y-2 text-sm text-white/75">
+                {plan.features.map((feature) => (
+                  <li key={feature}>· {feature}</li>
+                ))}
+              </ul>
+              <Link
+                href={`/register?plan=${plan.code}`}
+                className="mt-6 inline-flex h-10 items-center justify-center rounded-md bg-teal-400 px-4 text-sm font-semibold text-[#062017] hover:bg-teal-300"
+              >
+                Register with {plan.name}
+              </Link>
+            </article>
+          ))}
         </div>
       </section>
 

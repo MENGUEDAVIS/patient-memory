@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { requirePageRole } from "@/lib/guards";
 import { hospitalScope } from "@/lib/access";
+import Link from "next/link";
 import { PageHeader, Card } from "@/components/ui";
 
 export default async function SettingsPage() {
@@ -16,7 +17,16 @@ export default async function SettingsPage() {
       <Card>
         <p className="pm-label">Hospital</p>
         <p className="mt-2 text-lg font-medium">{hospital?.name}</p>
-        <p className="text-sm text-[var(--muted)]">{hospital?.code} · {hospital?.city}, {hospital?.country}</p>
+        <p className="text-sm text-[var(--muted)]">
+          {hospital?.code} · {hospital?.kind ?? "HOSPITAL"} · {hospital?.city}, {hospital?.country}
+        </p>
+        <p className="mt-3 text-sm text-[var(--muted)]">
+          To add another hospital or clinic as a separate workspace, use facility registration. That creates a new
+          administrator and billing bundle.
+        </p>
+        <Link href="/register" className="mt-3 inline-block text-sm underline">
+          Register another facility
+        </Link>
       </Card>
       <Card>
         <p className="pm-label">Data retention</p>

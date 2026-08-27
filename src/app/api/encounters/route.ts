@@ -20,12 +20,20 @@ export const GET = apiHandler(async (request) => {
   const url = new URL(request.url);
   const status = url.searchParams.get("status");
   const mine = url.searchParams.get("mine") === "1";
+  const patientPublicId = url.searchParams.get("patientPublicId");
   const professional = await prisma.healthcareProfessional.findUnique({ where: { userId: user.id } });
+  const patient = patientPublicId
+    ? await prisma.patient.findFirst({ where: { publicId: patientPublicId, hospitalId }, select: { id: true } })
+    : null;
+  if (patientPublicId && !patient) {
+    return NextResponse.json({ encounters: [] });
+  }
   const encounters = await prisma.encounter.findMany({
     where: {
       hospitalId,
       status: status ? (status as "DRAFT" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED") : undefined,
       clinicianId: mine && professional ? professional.id : undefined,
+      patientId: patient?.id,
     },
     include: {
       patient: true,

@@ -47,6 +47,7 @@ export const NAV: Record<Role, { href: string; label: string }[]> = {
   PHARMACIST: [
     { href: "/pharmacy", label: "Dashboard" },
     { href: "/pharmacy/prescriptions", label: "Prescriptions" },
+    { href: "/pharmacy/prescribe", label: "Issue prescription" },
     { href: "/pharmacy/dispensing", label: "Dispensing" },
   ],
   PATIENT: [
@@ -68,6 +69,7 @@ export type Permission =
   | "lab:review"
   | "pharmacy:view"
   | "pharmacy:dispense"
+  | "pharmacy:prescribe"
   | "audit:read"
   | "billing:manage"
   | "insurance:verify"
@@ -108,7 +110,7 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "pharmacy:view",
   ],
   LABORATORY_OPERATOR: ["patients:search", "lab:view", "lab:enter"],
-  PHARMACIST: ["patients:search", "pharmacy:view", "pharmacy:dispense"],
+  PHARMACIST: ["patients:search", "pharmacy:view", "pharmacy:dispense", "pharmacy:prescribe"],
   PATIENT: ["ehr:read"],
 };
 
@@ -166,7 +168,7 @@ export function canReviewLab(role: Role) {
 
 export function pathAllowed(role: Role, pathname: string) {
   if (pathname.startsWith("/api")) return true;
-  if (pathname === "/login" || pathname === "/") return true;
+  if (pathname === "/login" || pathname === "/" || pathname === "/register") return true;
   const home = ROLE_HOME[role];
   const prefix = home.split("/")[1];
   return pathname === home || pathname.startsWith(`/${prefix}/`);

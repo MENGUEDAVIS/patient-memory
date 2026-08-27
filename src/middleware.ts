@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { jwtVerify } from "jose";
 
-const PUBLIC = new Set(["/", "/login"]);
+const PUBLIC = new Set(["/", "/login", "/register"]);
 
 function secret() {
   const value = process.env.AUTH_SECRET;
@@ -16,6 +16,7 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith("/favicon") ||
     pathname.startsWith("/api/auth/login") ||
     pathname.startsWith("/api/health") ||
+    pathname.startsWith("/api/hospitals/register") ||
     pathname.includes(".")
   ) {
     return NextResponse.next();

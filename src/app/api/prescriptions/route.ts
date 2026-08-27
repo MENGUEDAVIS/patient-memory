@@ -30,16 +30,24 @@ export const GET = apiHandler(async (request) => {
 
 export const POST = apiHandler(async (request) => {
   const user = await requireSession();
-  await requirePerm(user, "clinical:write");
   const hospitalId = await hospitalScope(user);
+  const pharmacist = user.role === "PHARMACIST";
+  if (pharmacist) await requirePerm(user, "pharmacy:prescribe");
+  else await requirePerm(user, "clinical:write");
   const body = prescriptionSchema.parse(await request.json());
   const encounter = await prisma.encounter.findFirst({
     where: { publicId: body.encounterPublicId, hospitalId },
     include: { patient: { include: { allergies: true } }, clinicalNote: true },
   });
   if (!encounter) throw new HttpError(404, "Encounter was not found.");
-  if (encounter.clinicalNote?.isFinal) {
-    throw new HttpError(409, "Finalized records cannot be edited silently. Create an amendment.");
+  if (encounter.status === "CANCELLED") {
+    throw new HttpError(409, "Prescriptions cannot be added to a cancelled consultation.");
+  }
+  if (pharmacist && encounter.status !== "COMPLETED") {
+    throw new HttpError(
+      409,
+      "A pharmacist can add a prescription only after the patient has completed a consultation.",
+    );
   }
   const conflicts = conflictingMedications(
     encounter.patient.allergies.filter((a) => a.active).map((a) => a.substance),
@@ -52,7 +60,7 @@ export const POST = apiHandler(async (request) => {
       encounterId: encounter.id,
       patientId: encounter.patientId,
       hospitalId,
-      notes: body.notes,
+      notes: pharmacist ? [body.notes, "Issued at pharmacy after completed consultation"].filter(Boolean).join(" · ") : body.notes,
       items: { create: body.items },
     },
     include: { items: true },
@@ -81,9 +89,9 @@ export const POST = apiHandler(async (request) => {
   });
   const pharmacists = await prisma.user.findMany({ where: { hospitalId, role: "PHARMACIST", isActive: true } });
   await Promise.all(
-    pharmacists.map((pharmacist) =>
+    pharmacists.map((item) =>
       notify({
-        userId: pharmacist.id,
+        userId: item.id,
         hospitalId,
         patientId: encounter.patientId,
         title: "New prescription",
@@ -92,5 +100,15 @@ export const POST = apiHandler(async (request) => {
       }),
     ),
   );
+  if (encounter.patient.userId) {
+    await notify({
+      userId: encounter.patient.userId,
+      hospitalId,
+      patientId: encounter.patientId,
+      title: "New prescription on your record",
+      body: `${prescription.publicId} was added after your consultation.`,
+      kind: "PRESCRIPTION",
+    });
+  }
   return NextResponse.json({ prescription, conflicts }, { status: 201 });
 });

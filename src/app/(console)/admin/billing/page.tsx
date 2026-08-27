@@ -34,6 +34,7 @@ export default async function BillingPage() {
       </div>
       <div className="pm-card p-5">
         <p className="pm-label mb-3">Commercial configuration</p>
+        <p className="mb-3 text-sm text-[var(--muted)]">Bundle: {config?.planCode ?? "HOSPITAL"}</p>
         <BillingConfigForm
           config={{
             monthlyFeeUsd: Number(config?.monthlyFeeUsd ?? 500),

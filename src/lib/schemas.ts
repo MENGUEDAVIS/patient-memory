@@ -53,6 +53,17 @@ export const diagnosisSchema = z.object({
   isPrimary: z.boolean().optional(),
 });
 
+export const hospitalRegisterSchema = z.object({
+  facilityKind: z.enum(["HOSPITAL", "CLINIC"]),
+  name: z.string().min(3, "Facility name is required."),
+  city: z.string().min(2),
+  country: z.string().min(2),
+  adminFullName: z.string().min(3),
+  adminEmail: z.string().email(),
+  adminPassword: z.string().min(8),
+  plan: z.enum(["CLINIC", "HOSPITAL", "NETWORK"]),
+});
+
 export const prescriptionSchema = z.object({
   encounterPublicId: z.string(),
   notes: z.string().optional(),
