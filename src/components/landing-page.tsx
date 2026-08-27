@@ -18,6 +18,11 @@ const TIMELINE = [
   { time: "18:05", title: "Patient opened their own dossier", meta: "John Doe · PAT-00018492 · My Health" },
 ];
 
+const USD_TO_XOF = 600;
+
+const formatXof = (amountUsd: number) =>
+  `${Math.round(amountUsd * USD_TO_XOF).toLocaleString("fr-FR")} FCFA`;
+
 export function LandingPage({
   signedIn,
   home,
@@ -264,11 +269,11 @@ export function LandingPage({
               <p className="pm-label text-teal-200">{plan.audience}</p>
               <h3 className="mt-2 text-2xl font-semibold">{plan.name}</h3>
               <p className="mt-4 text-4xl font-semibold">
-                ${plan.monthlyFeeUsd}
+                {formatXof(plan.monthlyFeeUsd)}
                 <span className="text-base font-normal text-white/50"> / month</span>
               </p>
               <p className="mt-1 text-sm text-white/60">
-                ${plan.onboardingFeeUsd.toLocaleString()} onboarding · ${plan.encounterFeeUsd.toFixed(2)} / encounter
+                {formatXof(plan.onboardingFeeUsd)} onboarding · {formatXof(plan.encounterFeeUsd)} / encounter
               </p>
               <ul className="mt-5 flex-1 space-y-2 text-sm text-white/75">
                 {plan.features.map((feature) => (
