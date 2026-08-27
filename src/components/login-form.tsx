@@ -16,8 +16,9 @@ const ACCOUNTS = [
 export function LoginForm() {
   const router = useRouter();
   const params = useSearchParams();
-  const [email, setEmail] = useState("doctor@demo-hospital.com");
-  const [password, setPassword] = useState("DemoDoctor123!");
+  const asPatient = params.get("as") === "patient";
+  const [email, setEmail] = useState(asPatient ? "patient@demo-hospital.com" : "doctor@demo-hospital.com");
+  const [password, setPassword] = useState(asPatient ? "DemoPatient123!" : "DemoDoctor123!");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -55,6 +56,11 @@ export function LoginForm() {
       </form>
       <div>
         <p className="pm-label mb-2">Demo accounts</p>
+        {asPatient ? (
+          <p className="mb-2 rounded-md bg-teal-50 px-3 py-2 text-sm text-teal-900">
+            Patient portal for John Doe (PAT-00018492). You can open your own dossier without a clinician.
+          </p>
+        ) : null}
         <div className="space-y-1">
           {ACCOUNTS.map((account) => (
             <button

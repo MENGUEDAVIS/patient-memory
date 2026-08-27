@@ -42,7 +42,9 @@ export function AppShell({ user, children }: { user: SessionUser; children: Reac
           <Shield className="h-5 w-5 text-teal-300" />
           <div>
             <p className="text-sm font-semibold tracking-wide">Patient Memory</p>
-            <p className="text-[10px] uppercase tracking-[0.14em] text-white/50">Clinical trust</p>
+            <p className="text-[10px] uppercase tracking-[0.14em] text-white/50">
+              {user.role === "PATIENT" ? "My health record" : "Clinical trust"}
+            </p>
           </div>
         </div>
         <nav className="space-y-0.5 p-3">
@@ -74,7 +76,7 @@ export function AppShell({ user, children }: { user: SessionUser; children: Reac
           </button>
           <div className="hidden text-sm text-[var(--muted)] lg:block">
             {user.isDemo ? <span className="mr-2 rounded bg-amber-50 px-2 py-0.5 text-xs font-semibold text-amber-800">DEMO DATA</span> : null}
-            Hospital EHR & Clinical Intelligence
+            {user.role === "PATIENT" ? "Your record · you can open it yourself" : "Hospital EHR & Clinical Intelligence"}
           </div>
           <div className="flex items-center gap-4">
             <div className="relative">

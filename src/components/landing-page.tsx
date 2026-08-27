@@ -10,6 +10,7 @@ const TIMELINE = [
   { time: "10:52", title: "Diagnosis recorded", meta: "Clinical note finalized with version history" },
   { time: "11:30", title: "Laboratory result uploaded", meta: "Critical flag requires physician review" },
   { time: "12:30", title: "Medication dispensed", meta: "Prescription chained to the patient record" },
+  { time: "18:05", title: "Patient opened their own dossier", meta: "John Doe · PAT-00018492 · My Health" },
 ];
 
 export function LandingPage({ signedIn, home }: { signedIn: boolean; home: string }) {
@@ -88,12 +89,12 @@ export function LandingPage({ signedIn, home }: { signedIn: boolean; home: strin
             >
               {ctaLabel}
             </Link>
-            <a
-              href="#pillars"
+            <Link
+              href="/login?as=patient"
               className="rounded-md border border-white/20 px-5 py-2.5 text-sm font-medium text-white hover:bg-white/10"
             >
-              See the three pillars
-            </a>
+              Open the patient portal
+            </Link>
           </div>
           <p className="landing-fade landing-delay-4 mt-6 text-xs uppercase tracking-[0.16em] text-white/50">
             Demo data only · Investor walkthrough under 10 minutes
@@ -178,9 +179,23 @@ export function LandingPage({ signedIn, home }: { signedIn: boolean; home: strin
         <p className="pm-label text-teal-200">Presentation path</p>
         <h2 className="mt-3 text-3xl font-semibold">Start with John Doe · PAT-00018492</h2>
         <p className="mt-4 max-w-2xl text-white/70">
-          Sign in as the demo doctor, request patient authorization, record a consultation, send a laboratory order, then
-          switch roles to close the loop.
+          Walk the hospital roles first, then sign in as the patient. John Doe can open his own dossier, authorize a
+          doctor, and see who accessed the record.
         </p>
+        <div className="mt-6 grid gap-4 md:grid-cols-2">
+          <Link href="/login" className="rounded-2xl border border-white/10 bg-white/5 p-5 hover:border-teal-300/40">
+            <p className="pm-label text-teal-200">Hospital demo</p>
+            <p className="mt-2 font-medium">Doctor → lab → pharmacy → admin</p>
+            <p className="mt-1 text-sm text-white/60">Start a consultation on PAT-00018492 after patient authorization.</p>
+          </Link>
+          <Link href="/login?as=patient" className="rounded-2xl border border-teal-300/40 bg-teal-400/10 p-5 hover:border-teal-200">
+            <p className="pm-label text-teal-200">Patient demo</p>
+            <p className="mt-2 font-medium">John Doe opens his own record</p>
+            <p className="mt-1 text-sm text-white/60">
+              patient@demo-hospital.com · history, prescriptions, labs, and “who accessed my record?”
+            </p>
+          </Link>
+        </div>
         <div className="mt-8 overflow-x-auto rounded-2xl border border-white/10">
           <table className="w-full text-left text-sm">
             <thead>
