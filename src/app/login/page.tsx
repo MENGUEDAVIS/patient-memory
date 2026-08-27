@@ -15,7 +15,7 @@ export default async function LoginPage() {
         <div className="absolute inset-0 bg-[#071421]/75" />
         <div className="relative flex items-center gap-2">
           <Shield className="h-6 w-6 text-teal-300" />
-          <span className="text-lg font-semibold">Patient Memory</span>
+          <span className="text-lg font-semibold">BilAn</span>
         </div>
         <div className="relative max-w-lg space-y-4">
           <p className="text-sm uppercase tracking-[0.18em] text-teal-200">Hospital EHR & Clinical Intelligence</p>

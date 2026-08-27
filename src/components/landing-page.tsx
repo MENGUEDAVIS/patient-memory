@@ -3,6 +3,9 @@
 import Link from "next/link";
 import { Shield } from "lucide-react";
 import { useEffect, useState } from "react";
+import { DonutChart, MixBarChart, VolumeChart } from "@/components/charts";
+import { BRAND } from "@/lib/brand";
+import type { NamedCount, SeriesPoint } from "@/lib/aggregates";
 
 const TIMELINE = [
   { time: "10:42", title: "Record accessed", meta: "Dr. Amina Diallo · Internal Medicine" },
@@ -13,7 +16,21 @@ const TIMELINE = [
   { time: "18:05", title: "Patient opened their own dossier", meta: "John Doe · PAT-00018492 · My Health" },
 ];
 
-export function LandingPage({ signedIn, home }: { signedIn: boolean; home: string }) {
+export function LandingPage({
+  signedIn,
+  home,
+  stats,
+}: {
+  signedIn: boolean;
+  home: string;
+  stats: {
+    hospitalName: string;
+    patientName: string;
+    patientPublicId: string;
+    hospital: { volume: SeriesPoint[]; mix: NamedCount[] };
+    patient: { visits: SeriesPoint[]; mix: NamedCount[] };
+  } | null;
+}) {
   const [scrolled, setScrolled] = useState(false);
   const [active, setActive] = useState(0);
 
@@ -44,7 +61,7 @@ export function LandingPage({ signedIn, home }: { signedIn: boolean; home: strin
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-5">
           <a href="#top" className="flex items-center gap-2">
             <Shield className="h-5 w-5 text-teal-300" />
-            <span className="text-sm font-semibold tracking-wide">Patient Memory</span>
+            <span className="text-sm font-semibold tracking-wide">{BRAND.name}</span>
           </a>
           <nav className="hidden items-center gap-6 text-sm text-white/70 md:flex">
             <a href="#pillars" className="hover:text-white">
@@ -52,6 +69,9 @@ export function LandingPage({ signedIn, home }: { signedIn: boolean; home: strin
             </a>
             <a href="#timeline" className="hover:text-white">
               Accountability
+            </a>
+            <a href="#insights" className="hover:text-white">
+              Insights
             </a>
             <a href="#demo" className="hover:text-white">
               Demo
@@ -74,9 +94,9 @@ export function LandingPage({ signedIn, home }: { signedIn: boolean; home: strin
         />
         <div className="absolute inset-0 bg-gradient-to-r from-[#071421] via-[#071421]/80 to-[#071421]/25" />
         <div className="relative mx-auto flex min-h-screen max-w-6xl flex-col justify-end px-5 pb-20 pt-28 md:justify-center">
-          <p className="landing-fade pm-label text-teal-200">Hospital EHR & Clinical Intelligence</p>
+          <p className="landing-fade pm-label text-teal-200">{BRAND.name} · {BRAND.descriptor}</p>
           <h1 className="landing-fade landing-delay-1 mt-4 max-w-3xl text-4xl font-semibold leading-tight tracking-tight md:text-6xl">
-            Your medical history should follow you — not your file.
+            {BRAND.tagline}
           </h1>
           <p className="landing-fade landing-delay-2 mt-5 max-w-xl text-base text-white/75 md:text-lg">
             A complete digital memory of every patient, and a transparent record of every clinical interaction—reducing
@@ -104,7 +124,7 @@ export function LandingPage({ signedIn, home }: { signedIn: boolean; home: strin
 
       <section id="pillars" className="mx-auto max-w-6xl px-5 py-24">
         <p className="pm-label text-teal-200">Product philosophy</p>
-        <h2 className="mt-3 max-w-2xl text-3xl font-semibold">Patient memory. Clinical trust. Hospital intelligence.</h2>
+        <h2 className="mt-3 max-w-2xl text-3xl font-semibold">BilAn keeps the memory. Both sides see the aggregate.</h2>
         <div className="mt-10 grid gap-6 md:grid-cols-3">
           {[
             {
@@ -175,6 +195,35 @@ export function LandingPage({ signedIn, home }: { signedIn: boolean; home: strin
         </div>
       </section>
 
+      <section id="insights" className="border-y border-white/10 bg-[#0b1f33] py-24">
+        <div className="mx-auto max-w-6xl px-5">
+          <p className="pm-label text-teal-200">Live aggregation · DEMO DATA</p>
+          <h2 className="mt-3 text-3xl font-semibold">Hospital operations and the patient record, side by side.</h2>
+          <p className="mt-3 max-w-2xl text-white/70">
+            BilAn rolls clinical activity into explainable totals: volume, mix of work, and the composition of one
+            longitudinal dossier. No invented series — these charts read the seeded hospital database.
+          </p>
+          <div className="mt-10 grid gap-6 lg:grid-cols-2">
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
+              <p className="pm-label text-teal-200">Hospital side</p>
+              <p className="mt-1 font-medium">{stats?.hospitalName ?? "Hospital activity"}</p>
+              <p className="mb-4 text-sm text-white/60">Encounter volume and activity mix, last 30 days.</p>
+              <VolumeChart data={stats?.hospital.volume ?? []} theme="dark" name="Encounters" />
+              <MixBarChart data={stats?.hospital.mix ?? []} theme="dark" />
+            </div>
+            <div className="rounded-2xl border border-teal-300/30 bg-teal-400/10 p-5">
+              <p className="pm-label text-teal-200">Patient side</p>
+              <p className="mt-1 font-medium">
+                {stats ? `${stats.patientName} · ${stats.patientPublicId}` : "Patient record"}
+              </p>
+              <p className="mb-4 text-sm text-white/60">What sits in the dossier, and how visits accumulate.</p>
+              <DonutChart data={stats?.patient.mix ?? []} theme="dark" />
+              <VolumeChart data={stats?.patient.visits ?? []} theme="dark" name="Visits" />
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section id="demo" className="mx-auto max-w-6xl px-5 py-24">
         <p className="pm-label text-teal-200">Presentation path</p>
         <h2 className="mt-3 text-3xl font-semibold">Start with John Doe · PAT-00018492</h2>
@@ -231,7 +280,7 @@ export function LandingPage({ signedIn, home }: { signedIn: boolean; home: strin
       </section>
 
       <footer className="border-t border-white/10 px-5 py-8 text-center text-xs text-white/40">
-        DEMO DATA · Synthetic records only · Not a claim of jurisdictional compliance
+        BilAn · DEMO DATA · Synthetic records only · Not a claim of jurisdictional compliance
       </footer>
     </div>
   );

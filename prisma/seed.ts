@@ -80,7 +80,7 @@ const DIAGNOSES = [
 const DEPARTMENTS = ["Outpatient", "Internal Medicine", "Emergency", "Cardiology", "Laboratory", "Pharmacy"];
 
 async function main() {
-  console.log("Seeding Patient Memory demo data…");
+  console.log("Seeding BilAn demo data…");
   await prisma.timelineEvent.deleteMany();
   await prisma.recordAmendment.deleteMany();
   await prisma.pharmacyDispensing.deleteMany();

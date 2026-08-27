@@ -9,11 +9,13 @@ import { Alert, Card, PageHeader } from "@/components/ui";
 import { formatDate, formatDateTime } from "@/lib/dates";
 import { roleLabel } from "@/lib/rbac";
 import { yearsBetween } from "@/lib/ids";
+import { patientAggregates } from "@/lib/aggregates";
+import { DonutChart, VolumeChart } from "@/components/charts";
 
 export default async function MeHome() {
   const user = await requirePageRole("/me");
   const patient = await requireSelfPatient(user);
-  const [events, diagnoses, prescriptions, labs, followUps, logs, pending, notifications] = await Promise.all([
+  const [events, diagnoses, prescriptions, labs, followUps, logs, pending, notifications, aggregates] = await Promise.all([
     prisma.timelineEvent.findMany({
       where: { patientId: patient.id },
       orderBy: { createdAt: "desc" },
@@ -56,6 +58,7 @@ export default async function MeHome() {
       orderBy: { createdAt: "desc" },
       take: 8,
     }),
+    patientAggregates(patient.id),
   ]);
   const requesters = await prisma.user.findMany({
     where: { id: { in: pending.map((item) => item.grantedToId) } },
@@ -96,6 +99,19 @@ export default async function MeHome() {
           </div>
         </Alert>
       ) : null}
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        <Card>
+          <p className="pm-label mb-3">What is in my record</p>
+          <p className="mb-2 text-sm text-[var(--muted)]">Aggregation of consultations, diagnoses, prescriptions, laboratory and access events.</p>
+          <DonutChart data={aggregates.mix} />
+        </Card>
+        <Card>
+          <p className="pm-label mb-3">Visit history</p>
+          <p className="mb-2 text-sm text-[var(--muted)]">How your encounters accumulate over time.</p>
+          <VolumeChart data={aggregates.visits} name="Visits" />
+        </Card>
+      </div>
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {[

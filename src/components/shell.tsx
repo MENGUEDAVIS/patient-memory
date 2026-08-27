@@ -41,9 +41,9 @@ export function AppShell({ user, children }: { user: SessionUser; children: Reac
         <div className="flex h-16 items-center gap-2 border-b border-white/10 px-5">
           <Shield className="h-5 w-5 text-teal-300" />
           <div>
-            <p className="text-sm font-semibold tracking-wide">Patient Memory</p>
+            <p className="text-sm font-semibold tracking-wide">BilAn</p>
             <p className="text-[10px] uppercase tracking-[0.14em] text-white/50">
-              {user.role === "PATIENT" ? "My health record" : "Clinical trust"}
+              {user.role === "PATIENT" ? "My health record" : "Clinical intelligence"}
             </p>
           </div>
         </div>

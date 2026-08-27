@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Patient Memory",
-  description: "Hospital EHR and clinical intelligence — a complete digital memory of every patient.",
+  title: "BilAn",
+  description: "BilAn — hospital EHR and clinical intelligence. Your medical history should follow you — not your file.",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
