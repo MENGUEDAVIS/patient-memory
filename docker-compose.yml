@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: patient-memory-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: patient_memory
+      POSTGRES_PASSWORD: patient_memory
+      POSTGRES_DB: patient_memory
+    ports:
+      - "5433:5432"
+    volumes:
+      - patient_memory_pg:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U patient_memory -d patient_memory"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  patient_memory_pg:

@@ -1,0 +1,653 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  HOSPITAL_ADMINISTRATOR
+  MEDICAL_DIRECTOR
+  DOCTOR
+  LABORATORY_OPERATOR
+  PHARMACIST
+  PATIENT
+}
+
+enum VerificationStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+  SUSPENDED
+}
+
+enum AffiliationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  SUSPENDED
+}
+
+enum Sex {
+  MALE
+  FEMALE
+  OTHER
+  UNKNOWN
+}
+
+enum EncounterStatus {
+  DRAFT
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum LabOrderStatus {
+  ORDERED
+  SAMPLE_COLLECTED
+  PROCESSING
+  RESULT_AVAILABLE
+  REVIEWED
+}
+
+enum PrescriptionStatus {
+  ACTIVE
+  DISPENSED
+  PARTIALLY_DISPENSED
+  CANCELLED
+}
+
+enum InvoiceStatus {
+  DRAFT
+  ISSUED
+  PAID
+  VOID
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  MOCK
+}
+
+enum InsuranceDecision {
+  VERIFIED
+  NOT_VERIFIED
+  REQUIRES_REVIEW
+}
+
+enum InsightKind {
+  RISK
+  FORECAST_VOLUME
+  FORECAST_PHARMACY
+  RECOMMENDATION
+  ANOMALY
+  COPILOT
+}
+
+enum Severity {
+  LOW
+  MODERATE
+  HIGH
+  CRITICAL
+}
+
+model Hospital {
+  id           String   @id @default(uuid())
+  publicId     String   @unique
+  name         String
+  code         String   @unique
+  city         String
+  country      String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  users                 User[]
+  memberships           HospitalStaffMembership[]
+  patients              Patient[]
+  encounters            Encounter[]
+  auditEvents           AuditEvent[]
+  billingConfig         HospitalBillingConfig?
+  billingRecords        BillingRecord[]
+  notifications         Notification[]
+  forecasts             Forecast[]
+  insights              AiInsight[]
+  insuranceVerifications InsuranceVerification[]
+  payments              Payment[]
+}
+
+model User {
+  id           String    @id @default(uuid())
+  email        String    @unique
+  passwordHash String
+  role         Role
+  fullName     String
+  isActive     Boolean   @default(true)
+  isDemo       Boolean   @default(false)
+  hospitalId   String?
+  lastLoginAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  hospital     Hospital? @relation(fields: [hospitalId], references: [id])
+  professional HealthcareProfessional?
+  patient      Patient?
+  memberships  HospitalStaffMembership[]
+  auditEvents  AuditEvent[]             @relation("AuditActor")
+  notifications Notification[]
+  sessions     AuthSession[]
+
+  @@index([hospitalId, role])
+}
+
+model AuthSession {
+  id        String   @id @default(uuid())
+  userId    String
+  tokenHash String   @unique
+  expiresAt DateTime
+  ip        String?
+  userAgent String?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model HealthcareProfessional {
+  id                   String               @id @default(uuid())
+  userId               String               @unique
+  fullName             String
+  photoUrl             String?
+  professionalRole     Role
+  professionalId       String               @unique
+  qualification        String
+  licenseNumber        String
+  licenseIssuer        String
+  identificationStatus String               @default("ON_FILE")
+  verificationStatus   VerificationStatus   @default(PENDING)
+  createdAt            DateTime             @default(now())
+  updatedAt            DateTime             @updatedAt
+
+  user         User                       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  memberships  HospitalStaffMembership[]
+  encounters   Encounter[]                @relation("EncounterClinician")
+}
+
+model HospitalStaffMembership {
+  id             String             @id @default(uuid())
+  hospitalId     String
+  professionalId String
+  userId         String
+  role           Role
+  department     String
+  status         AffiliationStatus  @default(PENDING)
+  approvedAt     DateTime?
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+
+  hospital     Hospital               @relation(fields: [hospitalId], references: [id])
+  professional HealthcareProfessional @relation(fields: [professionalId], references: [id])
+  user         User                   @relation(fields: [userId], references: [id])
+
+  @@unique([hospitalId, professionalId])
+  @@index([userId, hospitalId, status])
+}
+
+model Patient {
+  id                 String   @id @default(uuid())
+  publicId           String   @unique
+  hospitalId         String
+  userId             String?  @unique
+  firstName          String
+  lastName           String
+  dateOfBirth        DateTime
+  sex                Sex
+  phone              String
+  email              String
+  addressLine        String
+  city               String
+  bloodGroup         String
+  emergencyName      String
+  emergencyPhone     String
+  emergencyRelation  String
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  hospital       Hospital            @relation(fields: [hospitalId], references: [id])
+  user           User?               @relation(fields: [userId], references: [id])
+  allergies      PatientAllergy[]
+  conditions     PatientCondition[]
+  encounters     Encounter[]
+  consents       Consent[]
+  accessLogs     AccessLog[]
+  auditEvents    AuditEvent[]
+  prescriptions  Prescription[]
+  labOrders      LaboratoryOrder[]
+  notifications  Notification[]
+  billingRecords BillingRecord[]
+  payments       Payment[]
+  procedures     Procedure[]
+  diagnoses      Diagnosis[]
+
+  @@index([hospitalId, lastName, firstName])
+  @@index([phone])
+  @@index([email])
+}
+
+model PatientAllergy {
+  id        String   @id @default(uuid())
+  patientId String
+  substance String
+  reaction  String
+  severity  Severity @default(MODERATE)
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  patient   Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  @@index([patientId])
+}
+
+model PatientCondition {
+  id        String   @id @default(uuid())
+  patientId String
+  name      String
+  status    String   @default("CHRONIC")
+  onsetDate DateTime?
+  createdAt DateTime @default(now())
+  patient   Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  @@index([patientId])
+}
+
+model Procedure {
+  id          String    @id @default(uuid())
+  patientId   String
+  hospitalId  String
+  encounterId String?
+  name        String
+  performedAt DateTime
+  notes       String?
+  patient     Patient   @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  @@index([patientId])
+}
+
+model Encounter {
+  id             String          @id @default(uuid())
+  publicId       String          @unique
+  hospitalId     String
+  patientId      String
+  clinicianId    String
+  department     String
+  status         EncounterStatus @default(DRAFT)
+  startedAt      DateTime        @default(now())
+  completedAt    DateTime?
+  cancelledAt    DateTime?
+  followUpAt     DateTime?
+  followUpNotes  String?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  hospital    Hospital               @relation(fields: [hospitalId], references: [id])
+  patient     Patient                @relation(fields: [patientId], references: [id])
+  clinician   HealthcareProfessional @relation("EncounterClinician", fields: [clinicianId], references: [id])
+  clinicalNote ClinicalNote?
+  vitalSigns  VitalSigns?
+  diagnoses   Diagnosis[]
+  prescriptions Prescription[]
+  labOrders   LaboratoryOrder[]
+  consents    Consent[]
+  accessLogs  AccessLog[]
+  auditEvents AuditEvent[]
+  billingRecord BillingRecord?
+  timelineEvents TimelineEvent[]
+  amendments  RecordAmendment[]
+  insuranceVerifications InsuranceVerification[]
+  payments    Payment[]
+
+  @@index([hospitalId, startedAt])
+  @@index([patientId, startedAt])
+  @@index([clinicianId, startedAt])
+}
+
+model ClinicalNote {
+  id                     String   @id @default(uuid())
+  encounterId            String   @unique
+  chiefComplaint         String?
+  historyOfPresentIllness String?
+  observations           String?
+  assessment             String?
+  isFinal                Boolean  @default(false)
+  version                Int      @default(1)
+  updatedAt              DateTime @updatedAt
+  encounter              Encounter @relation(fields: [encounterId], references: [id], onDelete: Cascade)
+}
+
+model VitalSigns {
+  id           String    @id @default(uuid())
+  encounterId  String    @unique
+  systolicMmHg Int?
+  diastolicMmHg Int?
+  heartRate    Int?
+  temperatureC Float?
+  spo2         Int?
+  respiratoryRate Int?
+  recordedAt   DateTime  @default(now())
+  encounter    Encounter @relation(fields: [encounterId], references: [id], onDelete: Cascade)
+}
+
+model Diagnosis {
+  id          String   @id @default(uuid())
+  encounterId String
+  patientId   String
+  code        String?
+  description String
+  isPrimary   Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  encounter   Encounter @relation(fields: [encounterId], references: [id], onDelete: Cascade)
+  patient     Patient   @relation(fields: [patientId], references: [id])
+
+  @@index([encounterId])
+  @@index([patientId])
+}
+
+model Prescription {
+  id          String             @id @default(uuid())
+  publicId    String             @unique
+  encounterId String
+  patientId   String
+  hospitalId  String
+  status      PrescriptionStatus @default(ACTIVE)
+  issuedAt    DateTime           @default(now())
+  notes       String?
+  encounter   Encounter          @relation(fields: [encounterId], references: [id], onDelete: Cascade)
+  patient     Patient            @relation(fields: [patientId], references: [id])
+  items       PrescriptionItem[]
+  dispensings PharmacyDispensing[]
+
+  @@index([patientId, status])
+  @@index([hospitalId, issuedAt])
+}
+
+model PrescriptionItem {
+  id             String       @id @default(uuid())
+  prescriptionId String
+  medication     String
+  dose           String
+  route          String
+  frequency      String
+  duration       String
+  instructions   String
+  quantity       Int
+  dispensedQty   Int          @default(0)
+  prescription   Prescription @relation(fields: [prescriptionId], references: [id], onDelete: Cascade)
+}
+
+model LaboratoryOrder {
+  id            String         @id @default(uuid())
+  publicId      String         @unique
+  encounterId   String
+  patientId     String
+  hospitalId    String
+  testName      String
+  status        LabOrderStatus @default(ORDERED)
+  isCritical    Boolean        @default(false)
+  orderedAt     DateTime       @default(now())
+  collectedAt   DateTime?
+  processedAt   DateTime?
+  resultAt      DateTime?
+  reviewedAt    DateTime?
+  reviewedById  String?
+  notes         String?
+  encounter     Encounter      @relation(fields: [encounterId], references: [id], onDelete: Cascade)
+  patient       Patient        @relation(fields: [patientId], references: [id])
+  result        LaboratoryResult?
+
+  @@index([hospitalId, status])
+  @@index([patientId])
+}
+
+model LaboratoryResult {
+  id              String          @id @default(uuid())
+  orderId         String          @unique
+  value           String
+  unit            String?
+  referenceRange  String?
+  interpretation  String?
+  isCritical      Boolean         @default(false)
+  fileName        String?
+  enteredById     String
+  enteredAt       DateTime        @default(now())
+  order           LaboratoryOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+}
+
+model PharmacyDispensing {
+  id             String       @id @default(uuid())
+  prescriptionId String
+  pharmacistId   String
+  quantity       Int
+  dispensedAt    DateTime     @default(now())
+  notes          String?
+  prescription   Prescription @relation(fields: [prescriptionId], references: [id], onDelete: Cascade)
+
+  @@index([prescriptionId])
+}
+
+model Consent {
+  id          String    @id @default(uuid())
+  patientId   String
+  encounterId String?
+  grantedToId String
+  hospitalId  String
+  type        String
+  otpHash     String?
+  reason      String?
+  expiresAt   DateTime
+  usedAt      DateTime?
+  createdAt   DateTime  @default(now())
+  patient     Patient   @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  encounter   Encounter? @relation(fields: [encounterId], references: [id])
+
+  @@index([patientId, grantedToId, expiresAt])
+}
+
+model AccessLog {
+  id          String    @id @default(uuid())
+  patientId   String
+  userId      String
+  hospitalId  String
+  encounterId String?
+  activity    String
+  reason      String?
+  emergency   Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  patient     Patient   @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  encounter   Encounter? @relation(fields: [encounterId], references: [id])
+
+  @@index([patientId, createdAt])
+}
+
+model AuditEvent {
+  id          String    @id @default(uuid())
+  publicId    String    @unique
+  activity    String
+  actorId     String
+  actorName   String
+  actorRole   Role
+  hospitalId  String
+  patientId   String?
+  encounterId String?
+  department  String?
+  reason      String?
+  metadata    Json?
+  ip          String?
+  userAgent   String?
+  createdAt   DateTime  @default(now())
+
+  actor     User       @relation("AuditActor", fields: [actorId], references: [id])
+  hospital  Hospital   @relation(fields: [hospitalId], references: [id])
+  patient   Patient?   @relation(fields: [patientId], references: [id])
+  encounter Encounter? @relation(fields: [encounterId], references: [id])
+
+  @@index([hospitalId, createdAt])
+  @@index([patientId, createdAt])
+  @@index([actorId, createdAt])
+  @@index([activity, createdAt])
+}
+
+model TimelineEvent {
+  id          String    @id @default(uuid())
+  encounterId String
+  patientId   String
+  actorName   String
+  actorRole   Role
+  activity    String
+  department  String
+  summary     String
+  data        Json?
+  createdAt   DateTime  @default(now())
+  encounter   Encounter @relation(fields: [encounterId], references: [id], onDelete: Cascade)
+
+  @@index([encounterId, createdAt])
+  @@index([patientId, createdAt])
+}
+
+model RecordAmendment {
+  id          String   @id @default(uuid())
+  encounterId String
+  field       String
+  previous    String
+  next        String
+  reason      String
+  actorId     String
+  createdAt   DateTime @default(now())
+  encounter   Encounter @relation(fields: [encounterId], references: [id], onDelete: Cascade)
+}
+
+model Notification {
+  id         String   @id @default(uuid())
+  userId     String
+  hospitalId String?
+  patientId  String?
+  channel    String   @default("IN_APP")
+  title      String
+  body       String
+  kind       String
+  readAt     DateTime?
+  createdAt  DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  hospital   Hospital? @relation(fields: [hospitalId], references: [id])
+  patient    Patient?  @relation(fields: [patientId], references: [id])
+
+  @@index([userId, createdAt])
+}
+
+model HospitalBillingConfig {
+  id                 String   @id @default(uuid())
+  hospitalId         String   @unique
+  monthlyFeeUsd      Decimal  @default(500)
+  encounterFeeUsd    Decimal  @default(0.30)
+  onboardingFeeUsd   Decimal  @default(5000)
+  updatedAt          DateTime @updatedAt
+  hospital           Hospital @relation(fields: [hospitalId], references: [id])
+}
+
+model BillingRecord {
+  id           String        @id @default(uuid())
+  publicId     String        @unique
+  hospitalId   String
+  patientId    String
+  encounterId  String        @unique
+  amountUsd    Decimal
+  status       InvoiceStatus @default(ISSUED)
+  billedAt     DateTime      @default(now())
+  hospital     Hospital      @relation(fields: [hospitalId], references: [id])
+  patient      Patient       @relation(fields: [patientId], references: [id])
+  encounter    Encounter     @relation(fields: [encounterId], references: [id])
+}
+
+model Payment {
+  id            String        @id @default(uuid())
+  provider      String        @default("MOCK")
+  providerRef   String        @unique
+  status        PaymentStatus @default(MOCK)
+  amountUsd     Decimal
+  hospitalId    String
+  patientId     String?
+  encounterId   String?
+  createdAt     DateTime      @default(now())
+  hospital      Hospital      @relation(fields: [hospitalId], references: [id])
+  patient       Patient?      @relation(fields: [patientId], references: [id])
+  encounter     Encounter?    @relation(fields: [encounterId], references: [id])
+}
+
+model InsuranceVerification {
+  id           String             @id @default(uuid())
+  claimId      String
+  patientPublicId String
+  hospitalId   String
+  encounterId  String?
+  decision     InsuranceDecision
+  reason       String
+  createdAt    DateTime           @default(now())
+  hospital     Hospital           @relation(fields: [hospitalId], references: [id])
+  encounter    Encounter?         @relation(fields: [encounterId], references: [id])
+
+  @@index([claimId])
+}
+
+model AiInsight {
+  id          String     @id @default(uuid())
+  hospitalId  String
+  kind        InsightKind
+  title       String
+  severity    Severity?
+  patientPublicId String?
+  observation String
+  dataSummary String
+  insight     String
+  recommendation String
+  confidence  String?
+  source      String
+  requiresHumanReview Boolean @default(true)
+  createdAt   DateTime   @default(now())
+  hospital    Hospital   @relation(fields: [hospitalId], references: [id])
+
+  @@index([hospitalId, kind, createdAt])
+}
+
+model Forecast {
+  id          String   @id @default(uuid())
+  hospitalId  String
+  kind        String
+  targetDate  DateTime
+  metric      String
+  low         Float?
+  high        Float?
+  point       Float?
+  confidence  String
+  method      String
+  note        String?
+  createdAt   DateTime @default(now())
+  hospital    Hospital @relation(fields: [hospitalId], references: [id])
+
+  @@index([hospitalId, kind, targetDate])
+}
+
+model DailyVolume {
+  id         String   @id @default(uuid())
+  hospitalId String
+  day        DateTime
+  encounters Int
+  @@unique([hospitalId, day])
+}
+
+model RetentionPolicy {
+  id                 String @id @default(uuid())
+  hospitalId         String @unique
+  auditRetentionDays Int    @default(2555)
+  exportEnabled      Boolean @default(true)
+}
